@@ -18,7 +18,7 @@ class iRODSCollection(object):
     @property
     def metadata(self):
         if not self._meta:
-            self._meta = iRODSMetaCollection(self.manager.sess.metadata, 
+            self._meta = iRODSMetaCollection(self.manager.sess.metadata,
                 Collection, self.path)
         return self._meta
 
@@ -40,16 +40,28 @@ class iRODSCollection(object):
             for _, replicas in grouped
         ]
 
+    def data_objects_paging(self, limit=-1, offset=0):
+        query = self.manager.sess.query(DataObject)\
+            .filter(DataObject.collection_id == self.id)\
+            .limit(limit)\
+            .offset(offset)
+        results = query.all()
+        grouped = itertools.groupby(results, operator.itemgetter(DataObject.id))
+        return [
+            iRODSDataObject(self.manager.sess.data_objects, self, list(replicas))
+            for _, replicas in grouped
+        ]
+
     def remove(self, recurse=True, force=False, additional_flags={}):
         self.manager.remove(self.path, recurse, force, additional_flags)
-        
+
     def move(self, path):
         self.manager.move(self.path, path)
 
     def walk(self, topdown=True):
         """
         Collection tree generator.
-        
+
         For each subcollection in the directory tree, starting at the
         collection, yield a 3-tuple
         """
