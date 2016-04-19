@@ -8,6 +8,8 @@ from irods.manager.access_manager import AccessManager
 from irods.manager.user_manager import UserManager, UserGroupManager
 from irods.manager.resource_manager import ResourceManager
 from irods.exception import NetworkException
+from socket import error as SocketError
+
 
 class iRODSSession(object):
     def __init__(self, *args, **kwargs):
@@ -32,7 +34,7 @@ class iRODSSession(object):
         for conn in self.pool.active | self.pool.idle:
             try:
                 conn.disconnect()
-            except NetworkException:
+            except (NetworkException, SocketError):
                 pass
             conn.release(True)
 
